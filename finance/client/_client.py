@@ -38,7 +38,7 @@ class Client():
 
         self.accounts = self._read_data_construct_list(
             file_path=self._accounts_file,
-            field_names=['id','name','type','country_code', 'label_id'],
+            field_names=['id','name','label_id','country_code', 'label_id'],
             resource_type=Account
         )
         

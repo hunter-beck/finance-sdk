@@ -13,6 +13,8 @@ setup(
     author='Hunter Beck',
     author_email='hunterbeck3@gmail.com',
     license='unlicense',
-    packages=find_packages('finance'),
-    zip_safe=False
+    packages=find_packages(),
+    install_requires=["pandas", "pyyaml"],
+    zip_safe=False,
+    include_package_data=True
 )
