@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
-from finances.client.data_classes._base import *
+from finance.client.data_classes._base import *
+import uuid
 
 @dataclass
 class Account():

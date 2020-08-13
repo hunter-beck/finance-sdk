@@ -1,4 +1,5 @@
 import pandas as pd
+import collections
 
 class UserList(collections.abc.MutableSequence):
     '''List of resources (e.g., AccountRecords). Used as a base for all list type objects.

@@ -1,1 +1,1 @@
-from finances.client._client import Client
+from finance.client._client import Client

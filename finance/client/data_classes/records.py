@@ -1,6 +1,9 @@
 from dataclasses import dataclass, field
-from finances.client.data_classes._base import *
+from finance.client.data_classes._base import *
 import pandas as pd
+from datetime import datetime
+import uuid
+
 
 @dataclass
 class AccountRecord():
@@ -46,7 +49,7 @@ class AccountRecordList(UserList):
         '''
         
         if type(account_ids) == str:
-            acccount_ids = [account_ids]
+            acccount_ids = list(account_ids)
         
         filtered_records = filter(lambda account_record: account_record.account_id in account_ids, self)
         
