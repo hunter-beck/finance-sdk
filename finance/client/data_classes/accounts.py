@@ -7,9 +7,9 @@ class Account():
     '''Individual bank account, investment fund, etc.'''
          
     name: str
-    type: str
     country_code: str
+    label_id: str
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
     
-class AccountList(UserList):
+class AccountList(GenericList):
     '''List of Accounts'''

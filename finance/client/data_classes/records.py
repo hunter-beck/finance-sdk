@@ -14,9 +14,9 @@ class AccountRecord():
     balance: float
     currency: str
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
+
     
-    
-class AccountRecordList(UserList):
+class AccountRecordList(GenericList):
     '''List of AccountRecords'''
     
     def getMostRecentRecord(self, account_ids, end_time=datetime.now()):
@@ -58,4 +58,3 @@ class AccountRecordList(UserList):
         res._inner_list = list(filtered_records)
         
         return res
-        

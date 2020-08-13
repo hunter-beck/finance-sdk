@@ -1,7 +1,8 @@
 import pandas as pd
 import collections
+from dataclasses import dataclass, field
 
-class UserList(collections.abc.MutableSequence):
+class GenericList(collections.abc.MutableSequence):
     '''List of resources (e.g., AccountRecords). Used as a base for all list type objects.
     '''
     def __init__(self):
@@ -47,7 +48,7 @@ class UserList(collections.abc.MutableSequence):
             ids (list of str): unique id of object
             
         Returns:
-            UserList: list of objects corresponding to ids
+            GenericList: list of objects corresponding to ids
         '''
         filtered_list = list(filter(lambda item: item.id in ids, self._inner_list))
         res = type(self)()
@@ -56,4 +57,3 @@ class UserList(collections.abc.MutableSequence):
             res.append(item)
         
         return res
-    
