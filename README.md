@@ -1,1 +1,1 @@
-# finances
+# finance-sdk
