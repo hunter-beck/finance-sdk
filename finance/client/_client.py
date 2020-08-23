@@ -92,6 +92,28 @@ class Client():
         
         self.account_records.append(account_record)
         
+    
+    def writeBack(self, data_types='All'):
+        '''Writes data stored temporarily on the client back to the source data files. Optionally, can select
+        a subset of data_types to write back
+        
+        Args:
+            data_types ('All' or list of str): 
+                'All': all available data_types will be written to respective source files
+                list subset of available data_types
+        '''
+        
+        if data_types == 'All':
+            data_types = self._data_types.keys()
+        
+        for data_type in data_types:
+            data = getattr(self, data_type)
+            df = data.to_pandas()
+            df.to_csv(
+                path_or_buf=self._data_types[data_type]['file_path'],
+                index=False,
+            )
+        
         
     def _read_data_construct_list(self, file_path, field_names, resource_type):
         '''Check wether the file exists (create the file if not found based on field_names
