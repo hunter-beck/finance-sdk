@@ -16,31 +16,31 @@ class Client():
         
         if not data_directory.is_dir():
             data_directory.mkdir(parents=True)
+            
+        self._data_types = {
+            'accounts' : {
+                'file_path' : data_directory / 'accounts.csv',
+                'field_names' : ['id','name','label_id','country_code', 'label_id'],
+                'resource_type' : Account
+            },
+            'account_records' : {
+                'file_path' : data_directory / 'account_records.csv',
+                'field_names' : ['datetime','account_id','balance','currency','id'],
+                'resource_type' : AccountRecord
+            },
+            'labels' : {
+                'file_path' : data_directory / 'labels.csv',
+                'field_names' : ['id','name','description', 'resource_type'],
+                'resource_type' : Label
+            }
+        }
         
-        self._accounts_file = data_directory / 'accounts.csv'
-        self._accounts_records_file = data_directory / 'account_records.csv'
-        self._labels_file = data_directory / 'labels.csv'
         self._country_codes_file = Path(__file__).parent / '_resources' / 'country_codes.csv'
         self._currency_codes_file = Path(__file__).parent / '_resources' / 'currency_codes.csv'
-            
-        self.labels = self._read_data_construct_list(
-            file_path=self._labels_file, 
-            field_names=['id','name','description', 'resource_type'],
-            resource_type=Label
-        )
-            
-        self.account_records = self._read_data_construct_list(
-            file_path=self._accounts_records_file,
-            field_names=['datetime','account_id','balance','currency','id'],
-            resource_type=AccountRecord
-        )
         
-
-        self.accounts = self._read_data_construct_list(
-            file_path=self._accounts_file,
-            field_names=['id','name','label_id','country_code', 'label_id'],
-            resource_type=Account
-        )
+        for data_type, type_properties in self._data_types.items():
+                    
+            setattr(self, data_type, self._read_data_construct_list(**type_properties))
         
         self._country_codes = []
 
@@ -65,9 +65,6 @@ class Client():
             account (Account): banking, invetment or other account
             
         '''
-        
-        if account.type not in self._account_types:
-            raise ValueError(f'Account type: {account.type} is not valid. Options are: {self._account_types}')
             
         if account.country_code not in self._country_codes:
             raise ValueError(f'Country code: {account.country_code} is not valid. Options are: {self._country_codes}')
@@ -103,7 +100,6 @@ class Client():
         Args:
             file_path (Path): path of the csv file to attempt reading 
             field_names (list of str): field names for the csv file read    
-            list_object (GenericList and inherited classes): list object to append data to
             resource_type (type): resource type to construct list of
         
         Returns:

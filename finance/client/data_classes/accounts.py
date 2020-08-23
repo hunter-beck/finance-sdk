@@ -8,7 +8,7 @@ class Account():
          
     name: str
     country_code: str
-    label_id: str
+    label_id: str = None
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
     
 class AccountList(GenericList):
