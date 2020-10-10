@@ -9,7 +9,7 @@ import uuid
 class AccountRecord():
     '''Individual record for a balance at a point in time for an account'''
     
-    datetime: datetime
+    date: datetime
     account_id: str
     balance: float
     currency: str
@@ -58,3 +58,15 @@ class AccountRecordList(GenericList):
         res._inner_list = list(filtered_records)
         
         return res
+    
+    
+account_records_table_definition = '''
+    CREATE TABLE account_records (
+        id text PRIMARY KEY,
+        date text NOT NULL,
+        account_id text NOT NULL,
+        balance real NOT NULL,
+        currency text NOT NULL,
+        FOREIGN KEY (account_id) REFERENCES accounts (id)
+    )
+'''

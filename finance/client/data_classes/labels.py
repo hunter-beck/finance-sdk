@@ -8,9 +8,16 @@ class Label():
     
     name: str
     description: str
-    resource_type: str
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
 
     
 class LabelList(GenericList):
     '''List of Type'''
+    
+labels_table_definition = '''
+    CREATE TABLE labels (
+        id text PRIMARY KEY,
+        name text NOT NULL,
+        description text
+    )
+'''

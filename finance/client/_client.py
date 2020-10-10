@@ -1,37 +1,44 @@
 import csv
-from finance.client.data_classes.records import *
-from finance.client.data_classes.accounts import *
-from finance.client.data_classes.labels import *
+from finance.client.data_classes.records import AccountRecord, AccountRecordList, account_records_table_definition
+from finance.client.data_classes.accounts import Account, AccountList, accounts_table_definition
+from finance.client.data_classes.labels import Label, LabelList, labels_table_definition
+from finance.client.utils._database import createTable
 from pathlib import Path
 import os
 import yaml
 import csv
+import sqlite3
+from sqlite3 import OperationalError
 
 class Client():
     '''Represents an instance of use of the finance tool'''
     
-    def __init__(self, data_directory=Path('data')):
+    def __init__(self, db_path=Path('data/db.sqlite3')):
         '''Initializes instance of the finance client
         '''
         
-        if not data_directory.is_dir():
-            data_directory.mkdir(parents=True)
+        self._db_path = db_path
+        
+        db_connection = sqlite3.connect(db_path)
             
         self._data_types = {
             'accounts' : {
-                'file_path' : data_directory / 'accounts.csv',
-                'field_names' : ['id','name','label_id','country_code', 'label_id'],
-                'resource_type' : Account
+                'table_name' : 'accounts',
+                'table_definition' : accounts_table_definition,
+                'resource_type' : Account,
+                'list_type':AccountList
             },
             'account_records' : {
-                'file_path' : data_directory / 'account_records.csv',
-                'field_names' : ['datetime','account_id','balance','currency','id'],
-                'resource_type' : AccountRecord
+                'table_name' : 'account_records',
+                'table_definition' : account_records_table_definition,
+                'resource_type' : AccountRecord,
+                'list_type':AccountRecordList
             },
             'labels' : {
-                'file_path' : data_directory / 'labels.csv',
-                'field_names' : ['id','name','description', 'resource_type'],
-                'resource_type' : Label
+                'table_name' : 'labels',
+                'table_definition' : labels_table_definition,
+                'resource_type' : Label,
+                'list_type':LabelList
             }
         }
         
@@ -39,7 +46,7 @@ class Client():
         self._currency_codes_file = Path(__file__).parent / '_resources' / 'currency_codes.csv'
         
         for data_type, type_properties in self._data_types.items():
-                    
+            
             setattr(self, data_type, self._read_data_construct_list(**type_properties))
         
         self._country_codes = []
@@ -48,7 +55,6 @@ class Client():
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 self._country_codes.append(row['alpha3_code'])
-
         
         self._currency_codes = []
 
@@ -115,37 +121,36 @@ class Client():
             )
         
         
-    def _read_data_construct_list(self, file_path, field_names, resource_type):
-        '''Check wether the file exists (create the file if not found based on field_names
+    def _read_data_construct_list(self, table_name, table_definition, resource_type, list_type):
+        '''Check wether the table exists (create the table if not found 
         and add them to the list object passed to the function.
         
         Args:
-            file_path (Path): path of the csv file to attempt reading 
-            field_names (list of str): field names for the csv file read    
+            table_name (str): name of the sql table
+            table_definition (str): defines the format of the sql table
             resource_type (type): resource type to construct list of
-        
+            list_type (type): type of list object which will be constructed
         Returns:
             (List Object): list object with appended data based on object_type
         '''
-        if resource_type == Account:
-            list_object = AccountList()
-        elif resource_type == AccountRecord:
-            list_object = AccountRecordList()
-        elif resource_type == Label:
-            list_object = LabelList()
-        else:
-            raise TypeError(f'Object Type: {resource_type} not recognized')
         
-        if file_path.exists():
-            with open(file_path, mode='r') as csv_file:
-                if csv_file.readable():
-                    csv_reader = csv.DictReader(csv_file)
-                    for row in csv_reader:
-                            list_object.append(resource_type(**row))
-                        
-        else:
-            with open(file_path, mode='w') as csv_file:
-                writer = csv.DictWriter(csv_file, fieldnames=field_names)
-                writer.writeheader()
-                
+        list_object = list_type()
+        
+        con = sqlite3.connect(self._db_path)
+        con.row_factory = sqlite3.Row
+        cur = con.cursor()
+        try:
+            cur.execute(f'SELECT * FROM {table_name}')
+        except OperationalError:
+            createTable(self, table_definition)
+        rows = cur.fetchall()
+        cur.close()
+        con.close()
+        
+        for row in rows:
+            values = list(row)
+            keys = row.keys()
+            row_dict = dict(zip(keys,values))
+            list_object.append(resource_type(**row_dict))
+        
         return list_object

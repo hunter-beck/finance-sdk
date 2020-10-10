@@ -13,3 +13,13 @@ class Account():
     
 class AccountList(GenericList):
     '''List of Accounts'''
+    
+accounts_table_definition = '''
+    CREATE TABLE accounts (
+        id text PRIMARY KEY,
+        name text NOT NULL,
+        country_code text NOT NULL,
+        label_id text,
+        FOREIGN KEY (label_id) REFERENCES labels (id)
+    )
+'''
