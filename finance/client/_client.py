@@ -2,7 +2,7 @@ import csv
 from finance.client.data_classes.records import AccountRecord, AccountRecordList, account_records_table_definition
 from finance.client.data_classes.accounts import Account, AccountList, accounts_table_definition
 from finance.client.data_classes.labels import Label, LabelList, labels_table_definition
-from finance.client.utils._database import createTable
+from finance.client.utils._database import createTable, updateMultipleRecords
 from pathlib import Path
 import os
 import yaml
@@ -26,19 +26,19 @@ class Client():
                 'table_name' : 'accounts',
                 'table_definition' : accounts_table_definition,
                 'resource_type' : Account,
-                'list_type':AccountList
+                'list_type': AccountList
             },
             'account_records' : {
                 'table_name' : 'account_records',
                 'table_definition' : account_records_table_definition,
                 'resource_type' : AccountRecord,
-                'list_type':AccountRecordList
+                'list_type': AccountRecordList
             },
             'labels' : {
                 'table_name' : 'labels',
                 'table_definition' : labels_table_definition,
                 'resource_type' : Label,
-                'list_type':LabelList
+                'list_type': LabelList
             }
         }
         
@@ -113,12 +113,14 @@ class Client():
             data_types = self._data_types.keys()
         
         for data_type in data_types:
-            data = getattr(self, data_type)
-            df = data.to_pandas()
-            df.to_csv(
-                path_or_buf=self._data_types[data_type]['file_path'],
-                index=False,
-            )
+            records = getattr(self, data_type)
+            
+            if len(records) != 0:
+                updateMultipleRecords(
+                    db_path=self._db_path, 
+                    table_name=self._data_types[data_type]['table_name'],
+                    records=records
+                )    
         
         
     def _read_data_construct_list(self, table_name, table_definition, resource_type, list_type):
@@ -142,7 +144,7 @@ class Client():
         try:
             cur.execute(f'SELECT * FROM {table_name}')
         except OperationalError:
-            createTable(self, table_definition)
+            createTable(self._db_path, table_definition)
         rows = cur.fetchall()
         cur.close()
         con.close()
