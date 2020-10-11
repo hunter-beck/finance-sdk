@@ -35,7 +35,6 @@ def updateMultipleRecords(db_path, table_name, records):
     val_placeholder = ','.join(['?']*len(values))
     
     update_query = f'''INSERT OR REPLACE INTO {table_name} {values} VALUES ({val_placeholder})'''
-    print(update_query)
     cur.executemany(update_query, tuple_records)
     
     con.commit()
