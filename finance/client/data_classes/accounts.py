@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from finance.client.data_classes._base import *
 import uuid
+from finance.client.utils._database import filterData
 
 @dataclass
 class Account():
@@ -11,15 +12,63 @@ class Account():
     label_id: str = None
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
     
+    
 class AccountList(GenericList):
     '''List of Accounts'''
     
-accounts_table_definition = '''
-    CREATE TABLE accounts (
-        id text PRIMARY KEY,
-        name text NOT NULL,
-        country_code text NOT NULL,
-        label_id text,
-        FOREIGN KEY (label_id) REFERENCES labels (id)
-    )
-'''
+ 
+class AccountsAPI(GenericAPI):
+    
+    _table_name = 'accounts'
+    
+    _table_definition = '''
+        CREATE TABLE accounts (
+            id text PRIMARY KEY,
+            name text NOT NULL,
+            country_code text NOT NULL,
+            label_id text,
+            FOREIGN KEY (label_id) REFERENCES labels (id)
+        )
+    '''
+    
+    _resource_type = Account
+    _list_type = AccountList
+    
+    def list(self, name=None, country_code=None, label_id=None):
+        '''Retrieves a list of accounts based on the criteria. 
+
+        Args:
+            name (str): name of account
+            country_code (str): country code for region (e.g., USA)
+            label_id (str): unique id of the label on the account
+        Returns:
+            (list): objects meeting filter criteria
+        '''
+        
+        query_list = []
+            
+        if name:
+            name_query = f'name = "{name}"'
+            query_list.append(name_query)
+
+        if country_code:
+            country_code_query = f'country_code = "{country_code}"'
+            query_list.append(country_code_query)
+            
+        if label_id:
+            label_query = f'label_id = "{label_id}"'
+            query_list.append(label_query)
+            
+        if len(query_list) > 0:
+            query = 'WHERE ' + ' AND '.join(query_list)
+        else:
+            query = ''
+            
+        return filterData(
+            db_path=self._db_path, 
+            table_name=self._table_name,
+            resource_type=self._resource_type,
+            list_type=self._list_type,
+            query_filter=query)
+            
+            

@@ -1,6 +1,45 @@
 import pandas as pd
 import collections
 from dataclasses import dataclass, field
+from finance.client.utils._database import retrieveData, updateMultipleRecords, createMultipleRecords
+
+class GenericAPI():
+    '''Generic interface to SQLite database from resource objects
+    '''
+    def __init__(self, db_path):
+        self._db_path = db_path
+
+    def retrieve(self, ids):
+        '''Retrieves specific resources based on id.
+        
+        Args:
+            ids (list of str): ids to retrieve
+        Returns:
+            (list): objects with specified ids
+        '''
+        
+        return retrieveData(
+            db_path=self._db_path,
+            table_name=self._table_name, 
+            table_definition=self._table_definition,
+            resource_type=self._resource_type,
+            list_type=self._list_type,
+            ids=ids
+        )   
+    
+    def create(self, objects):
+        
+        createMultipleRecords(
+            db_path=self._db_path, 
+            table_name=self._table_name,
+            records=objects)
+        
+    def update(self, objects):
+        
+        updateMultipleRecords(
+            db_path=self._db_path, 
+            table_name=self._table_name,
+            records=objects)
 
 class GenericList(collections.abc.MutableSequence):
     '''List of resources (e.g., AccountRecords). Used as a base for all list type objects.
