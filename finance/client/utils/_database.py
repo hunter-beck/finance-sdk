@@ -22,6 +22,41 @@ def createTable(db_path, table_definition):
     con.commit()
     con.close()
     
+def deleteMultipleRecords(db_path, table_name, records):
+    '''DELETE records in the specified table based on the parameters.
+    
+    Args:
+        db_path (Path): db_path (Path): path defining the location of the sqlite3 database
+        table_name (str): name of table in the database
+        records (list): list of records with the same structure as 'values'
+            NOTE: all records must be of the same dataclass
+    '''
+    
+    if type(records) != list:
+        records = [records]
+    
+    values = tuple(asdict(records[0]).keys()) # uses first record as indicative of all records
+    
+    tuple_records = [astuple(record) for record in records]
+    
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+    
+    val_placeholder = ','.join(['?']*len(values))
+    
+    update_query = f'''DELETE FROM {table_name} {values} VALUES ({val_placeholder})'''
+    
+    try:
+        cur.executemany(update_query, tuple_records)
+    except:
+        cur.close()
+        con.close()
+        raise
+    
+    con.commit()
+    cur.close()
+    con.close()
+    
 
 def createMultipleRecords(db_path, table_name, records):
     '''INSERT records in the specified table based on the parameters.
@@ -65,7 +100,6 @@ def updateMultipleRecords(db_path, table_name, records):
         db_path (Path): db_path (Path): path defining the location of the sqlite3 database
         table_name (str): name of table in the database
         records (list): list of records with the same structure as 'values'
-            NOTE: all records must be of the same dataclass
     '''
     
     if type(records) != list:
@@ -181,3 +215,34 @@ def _contructList(rows, resource_type, list_type):
         list_object.append(resource_type(**row_dict))
         
     return list_object
+
+
+def deleteMultipleRecords(db_path, table_name, ids):
+    '''DELETE records in the specified table based on the parameters.
+    
+    Args:
+        db_path (Path): db_path (Path): path defining the location of the sqlite3 database
+        table_name (str): name of table in the database
+        ids (str OR list of str): ids of the records to delete
+    '''
+    
+    if type(ids) != list:
+        ids = [ids]
+    
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+        
+    delete_query = f'''DELETE FROM {table_name} WHERE id=?'''
+    
+    try:
+        for id in ids:
+            cur.execute(delete_query, (id,))
+            
+    except:
+        cur.close()
+        con.close()
+        raise
+    
+    con.commit()
+    cur.close()
+    con.close()

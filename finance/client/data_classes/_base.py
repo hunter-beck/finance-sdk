@@ -1,7 +1,7 @@
 import pandas as pd
 import collections
 from dataclasses import dataclass, field
-from finance.client.utils._database import retrieveData, updateMultipleRecords, createMultipleRecords
+from finance.client.utils._database import retrieveData, updateMultipleRecords, createMultipleRecords, deleteMultipleRecords
 
 class GenericAPI():
     '''Generic interface to SQLite database from resource objects
@@ -27,18 +27,39 @@ class GenericAPI():
         )   
     
     def create(self, objects):
+        '''Create a new object in the database.
         
+        Args:
+            objects (list of Account, Record, Label): items to be written to the database
+        '''
         createMultipleRecords(
             db_path=self._db_path, 
             table_name=self._table_name,
             records=objects)
         
-    def update(self, objects):
+    def upsert(self, objects):
+        '''Upsert the objects passed. 
+        
+        Args:
+            objects (list of Account, Record, Label): objects to upsert
+        '''
         
         updateMultipleRecords(
             db_path=self._db_path, 
             table_name=self._table_name,
             records=objects)
+        
+    def delete(self, ids):
+        '''Delete the data from the database based on the specified ids
+        
+        Args:
+            ids (str | list of str): ids to delete
+        '''
+        deleteMultipleRecords(
+            db_path=self._db_path
+            table_name=self._table_name,
+            ids=ids
+        )
 
 class GenericList(collections.abc.MutableSequence):
     '''List of resources (e.g., AccountRecords). Used as a base for all list type objects.
