@@ -56,7 +56,7 @@ class GenericAPI():
             ids (str | list of str): ids to delete
         '''
         deleteMultipleRecords(
-            db_path=self._db_path
+            db_path=self._db_path,
             table_name=self._table_name,
             ids=ids
         )
