@@ -21,7 +21,6 @@ class GenericAPI():
         return retrieveData(
             db_path=self._db_path,
             table_name=self._table_name, 
-            table_definition=self._table_definition,
             resource_type=self._resource_type,
             list_type=self._list_type,
             ids=ids
