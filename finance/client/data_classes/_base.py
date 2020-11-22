@@ -95,8 +95,8 @@ class GenericList(collections.abc.MutableSequence):
         
         df = pd.DataFrame([vars(x) for x in self._inner_list])
         
-        if 'datetime' in df.columns:
-            df['datetime'] = pd.to_datetime(df['datetime'])
+        if 'date' in df.columns:
+            df['date'] = pd.to_datetime(df['date'])
         
         return df
     
