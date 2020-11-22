@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import uuid
 from finance.client.utils._database import filterData
+from finance.client.utils._currency_conversion import convert_currency_dataframe
 
 @dataclass
 class Record():
@@ -58,6 +59,25 @@ class RecordList(GenericList):
         res._inner_list = list(filtered_records)
         
         return res
+    
+    def to_pandas(self, currency=None):
+        '''Retrieves records in a DataFrame with an option to convert currency.
+        
+        Args:
+            currency (str): currency to convert all records to
+        
+        Returns:
+            (DataFrame): records in a dataframe
+        '''
+        df = pd.DataFrame([vars(x) for x in self._inner_list])
+        
+        if 'date' in df.columns:
+            df['date'] = pd.to_datetime(df['date'])
+            
+        if currency:
+            df = convert_currency_dataframe(df, currency)
+            
+        return df
     
     
 class RecordsAPI(GenericAPI):
