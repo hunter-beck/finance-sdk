@@ -138,13 +138,15 @@ class RecordsAPI(GenericAPI):
             query_list.append(currency_query)
             
         if len(query_list) > 0:
-            query = 'WHERE ' + ' AND '.join(query_list)
+            filter = 'WHERE ' + ' AND '.join(query_list)
         else:
-            query = ''
+            filter = ''
+            
+        query = f'SELECT * FROM {self._table_name} {filter}'
             
         return filterData(
             db_path=self._db_path, 
-            table_name=self._table_name,
+            query=query,
             resource_type=self._resource_type,
-            list_type=self._list_type,
-            query_filter=query)
+            list_type=self._list_type
+        )

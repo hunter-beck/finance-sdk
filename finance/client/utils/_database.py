@@ -130,17 +130,16 @@ def retrieveData(db_path, table_name, resource_type, list_type, ids):
     return _contructList(rows, resource_type, list_type)
 
 
-def filterData(db_path, table_name, resource_type, list_type, query_filter):
+def filterData(db_path, query, resource_type, list_type):
     '''Check wether the table exists (create the table if not found 
     and add them to the list object passed to the function.
     
     Args:
         db_path (Path): path to the SQLite3 database
-        table_name (str): name of the sql table
+        query (str): specifying query parameters for data retrieval
         table_definition (str): defines the format of the sql table
         resource_type (type): resource type to construct list of
         list_type (type): type of list object which will be constructed
-        query_filter (str): 'WHERE' statement specifying query parameters for data retrieval
     Returns:
         (List Object): list object with appended data based on object_type
     '''
@@ -150,7 +149,7 @@ def filterData(db_path, table_name, resource_type, list_type, query_filter):
     cur = con.cursor()
 
     try:
-        cur.execute(f'SELECT * FROM {table_name} {query_filter}')
+        cur.execute(query)
     except:
         cur.close()
         con.close()
