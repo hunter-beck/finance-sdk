@@ -150,3 +150,29 @@ class RecordsAPI(GenericAPI):
             resource_type=self._resource_type,
             list_type=self._list_type
         )
+        
+    def get_latest(self, account_ids=None):
+        '''Retrieves the newest record for each of the accounts provided
+        
+        Args:
+            account_ids (list of str): account ids to retrieve, defaults to all accounts
+            
+        Returns:
+            (RecordList): most recent records on each account
+        '''
+        
+        if account_ids:
+            account_filter = 'WHERE account_id IN ("' + '","'.join(account_ids) + '")'
+            
+        else:
+            account_filter = ''
+            
+            
+        query = f'SELECT * FROM (SELECT * FROM {self._table_name} ORDER BY date DESC) tmp {account_filter} GROUP BY account_id'
+        
+        return filterData(
+            db_path=self._db_path, 
+            query=query,
+            resource_type=self._resource_type,
+            list_type=self._list_type
+        )
