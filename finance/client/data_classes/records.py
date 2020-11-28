@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 import uuid
 from finance.client.utils._database import filterData
-from finance.client.utils._currency_conversion import convert_currency_dataframe
+from finance.client.utils._currency_conversion import get_exchange_rates
 
 @dataclass
 class Record():
@@ -20,47 +20,41 @@ class Record():
 class RecordList(GenericList):
     '''List of Records'''
     
-    def getMostRecentRecord(self, account_ids, end_time=datetime.now()):
-        '''Retrieves the value (based on the newest Record) for the specified account_id
+    def convert_currency(self, currency, date=None):
+        '''Converts the currency of all records to the specified currency
         
-        Args:
-            account_ids (list of str): unique ids for the accounts
-            end_time (datetime): defaults to now, but can specify time in past to get 
-                balance on that date (inclusive)
-        
-        Returns:
-            (RecordList): list of most recent account records for account_ids specified
-        '''
-                
-        records = self.to_pandas()
-        filtered_records = records[(records['account_id'].isin(account_ids)) & (records['datetime'] <= end_time)]        
-        idx = filtered_records.groupby(['account_id'])['datetime'].transform(max) == filtered_records['datetime']
-        grouped_records = filtered_records[idx]        
-        
-        return self.retrieve(ids=list(grouped_records['id']))
-    
-    def getRecords(self, account_ids):
-        '''Retrieves the account records for the account_ids specified
-        
-        Args: 
-            account_ids (str or list of str): unique id(s) for the accounts
+        Agrs:
+            currency (str): currency to convert to
+            date (datetime): date of FOREX rate for currency; defaults to date of record
             
         Returns:
-            (RecordList): list of records corresponding to account ids specified
+            (RecoordList): list of records with modified currencies / balances
         '''
-        
-        if type(account_ids) == str:
-            acccount_ids = list(account_ids)
-        
-        filtered_records = filter(lambda record: record.account_id in account_ids, self)
-        
-        res = RecordList()
-        
-        res._inner_list = list(filtered_records)
-        
-        return res
     
-    def to_pandas(self, currency=None):
+        if date:
+            exchange_rates = get_exchange_rates(
+                base=currency, 
+                date=date
+            )
+            
+            for record in self:
+                record.balance = round(record.balance / exchange_rates['rates'][record.currency], 2)
+                record.currency = currency
+        
+        else:
+            for record in self:
+                if record.currency != currency:
+                    exchange_rates = get_exchange_rates(
+                        base=currency, 
+                        date=datetime.fromisoformat(record.date)
+                    )
+
+                    record.balance = round(record.balance / exchange_rates['rates'][record.currency], 2)    
+                    record.currency = currency
+                    
+        return self
+    
+    def to_pandas(self):
         '''Retrieves records in a DataFrame with an option to convert currency.
         
         Args:
@@ -73,9 +67,6 @@ class RecordList(GenericList):
         
         if 'date' in df.columns:
             df['date'] = pd.to_datetime(df['date'])
-            
-        if currency:
-            df = convert_currency_dataframe(df, currency)
             
         return df
     
