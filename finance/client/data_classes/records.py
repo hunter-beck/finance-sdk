@@ -38,7 +38,7 @@ class Record():
                 date=date
             )
             
-            self.balance = round(self.balance / exchange_rates['rates'][self.currency], 2)
+            self.balance = round(self.balance / exchange_rates['rates'][currency], 2)
             self.currency = currency
         
         else:
@@ -48,7 +48,7 @@ class Record():
                     date=datetime.fromisoformat(self.date)
                 )
 
-                self.balance = round(self.balance / exchange_rates['rates'][self.currency], 2)    
+                self.balance = round(self.balance / exchange_rates['rates'][currency], 2)    
                 self.currency = currency
                 
         return self
