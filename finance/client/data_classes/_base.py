@@ -6,8 +6,8 @@ from finance.client.utils._database import retrieveData, updateMultipleRecords, 
 class GenericAPI():
     '''Generic interface to SQLite database from resource objects
     '''
-    def __init__(self, db_path):
-        self._db_path = db_path
+    def __init__(self, client):
+        self._client = client
 
     def retrieve(self, ids):
         '''Retrieves specific resources based on id.
@@ -18,12 +18,18 @@ class GenericAPI():
             (list): objects with specified ids
         '''
         
+        if len(ids) > 1:    
+            query_filter = "WHERE id IN" + "(" + ",".join([f"'{id}'" for id in ids]) + ")"
+        else:
+            query_filter = f"WHERE id = '{ids[0]}'"
+            
+        retrieve_query = f'SELECT * FROM {self._table_name} {query_filter}'
+                
         return retrieveData(
-            db_path=self._db_path,
-            table_name=self._table_name, 
+            client=self._client,
+            query=retrieve_query,
             resource_type=self._resource_type,
             list_type=self._list_type,
-            ids=ids
         )   
     
     def create(self, objects):
@@ -33,7 +39,7 @@ class GenericAPI():
             objects (list of Account, Record, Label): items to be written to the database
         '''
         createMultipleRecords(
-            db_path=self._db_path, 
+            client=self._client,
             table_name=self._table_name,
             records=objects)
         

@@ -3,7 +3,7 @@ from finance.client.data_classes._base import *
 import pandas as pd
 from datetime import datetime
 import uuid
-from finance.client.utils._database import filterData
+from finance.client.utils._database import retrieveData
 from finance.client.utils._currency_conversion import get_exchange_rates
 
 @dataclass
@@ -144,11 +144,11 @@ class RecordsAPI(GenericAPI):
             
         query = f'SELECT * FROM {self._table_name} {filter}'
             
-        return filterData(
-            db_path=self._db_path, 
+        return retrieveData(
+            client=self._client, 
             query=query,
             resource_type=self._resource_type,
-            list_type=self._list_type
+            list_type=self._list_type,
         )
         
     def get_latest(self, account_ids=None):
@@ -162,16 +162,24 @@ class RecordsAPI(GenericAPI):
         '''
         
         if account_ids:
-            account_filter = 'WHERE account_id IN ("' + '","'.join(account_ids) + '")'
+            account_filter = 'WHERE account_id IN (' + ','.join([f"'{id}'" for id in account_ids]) + ')'
             
         else:
             account_filter = ''
             
-            
-        query = f'SELECT * FROM (SELECT * FROM {self._table_name} ORDER BY date DESC) tmp {account_filter} GROUP BY account_id'
-        
-        return filterData(
-            db_path=self._db_path, 
+        query = f'''
+            SELECT * FROM (
+                SELECT account_id, MAX(date) AS date 
+                FROM {self._table_name}
+                {account_filter} 
+                GROUP BY account_id
+            ) max_table
+            INNER JOIN {self._table_name} full_table
+            ON full_table.account_id = max_table.account_id AND full_table.date = max_table.date
+        '''
+                        
+        return retrieveData(
+            client=self._client, 
             query=query,
             resource_type=self._resource_type,
             list_type=self._list_type

@@ -12,18 +12,32 @@ from sqlite3 import OperationalError
 class Client():
     '''Represents an instance of use of the finance tool'''
     
-    def __init__(self, db_path=Path('data/db.sqlite3')):
+    def __init__(self, db_type, server=None, database=None, 
+                 username=None, password=None, driver=None, db_path=None):
         '''Initializes instance of the finance client
         '''
+        self._db_path = db_path 
+        self._db_type = db_type
         
-        self._db_path = db_path
-        
+        if db_type == 'sqlite':
+                
+            self.accounts = AccountsAPI(client=self)
+            self.records = RecordsAPI(client=self)
+            self.labels = LabelsAPI(client=self)
+            
+        elif db_type == 'azure-sql':
+            self._server = server
+            self._database = database
+            self._username = username
+            self._password = password
+            self._driver = driver
+                
+            self.accounts = AccountsAPI(client=self,)
+            self.records = RecordsAPI(client=self)
+            self.labels = LabelsAPI(client=self)
+            
         self._country_codes_file = Path(__file__).parent / '_resources' / 'country_codes.csv'
         self._currency_codes_file = Path(__file__).parent / '_resources' / 'currency_codes.csv'
-            
-        self.accounts = AccountsAPI(db_path=self._db_path)
-        self.records = RecordsAPI(db_path=self._db_path)
-        self.labels = LabelsAPI(db_path=self._db_path)
         
         self._country_codes = []
 

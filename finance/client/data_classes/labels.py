@@ -1,7 +1,7 @@
 from finance.client.data_classes._base import *
 from dataclasses import dataclass, field
 import uuid
-from finance.client.utils._database import filterData
+from finance.client.utils._database import retrieveData
 
 @dataclass
 class Label():
@@ -52,8 +52,8 @@ class LabelsAPI(GenericAPI):
             
         query = f'SELECT * FROM {self._table_name} {filter}'
             
-        return filterData(
-            db_path=self._db_path, 
+        return retrieveData(
+            client=self._client, 
             query=query,
             resource_type=self._resource_type,
             list_type=self._list_type,
