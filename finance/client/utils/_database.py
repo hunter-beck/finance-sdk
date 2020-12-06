@@ -1,6 +1,8 @@
 import sqlite3
 from dataclasses import astuple, asdict
 from sqlite3 import OperationalError
+import pyodbc
+import time
 
 def createTable(db_path, table_definition):
     '''Creates table at the db_path with table_definition
@@ -23,30 +25,26 @@ def createTable(db_path, table_definition):
     con.close()
     
 
-def createMultipleRecords(db_path, table_name, records):
+def createMultipleRecords(client, table_name, records):
     '''INSERT records in the specified table based on the parameters.
     
     Args:
-        db_path (Path): db_path (Path): path defining the location of the sqlite3 database
+        client (Client): Finance client with connection details
         table_name (str): name of table in the database
-        records (list): list of records with the same structure as 'values'
+        records (iterable): list of records with the same structure as 'values'
             NOTE: all records must be of the same dataclass
     '''
     
-    if type(records) != list:
-        records = [records]
-    
-    values = tuple(asdict(records[0]).keys()) # uses first record as indicative of all records
+    values = f"({','.join(asdict(records[0]).keys())})"
     
     tuple_records = [astuple(record) for record in records]
     
-    con = sqlite3.connect(db_path)
+    con = dbConnection(client)
     cur = con.cursor()
     
-    val_placeholder = ','.join(['?']*len(values))
+    val_placeholder = ','.join(['?']*len(asdict(records[0]).keys()))
     
     update_query = f'''INSERT INTO {table_name} {values} VALUES ({val_placeholder})'''
-    
     try:
         cur.executemany(update_query, tuple_records)
     except:
@@ -210,3 +208,37 @@ def deleteMultipleRecords(db_path, table_name, ids):
     con.commit()
     cur.close()
     con.close()
+    
+    
+def dbConnection(client, timeout_retries=5):
+    '''Establishes connection to either SQLite or Azure SQL DB
+    
+    Args:
+        client (Client): Finance client with connection details
+    '''
+    
+    if client._db_type == 'azure-sql':
+    
+        for i in range(timeout_retries):
+            try: 
+                return pyodbc.connect(
+                    'DRIVER='+client._driver+\
+                    ';SERVER='+client._server+\
+                    ';PORT=1433'+\
+                    ';DATABASE='+client._database+\
+                    ';UID='+client._username+\
+                    ';PWD='+ client._password
+                )
+            
+            except TimeoutError: 
+                time.sleep(1)
+            
+                if i == (timeout_retries-1):
+                    raise
+    
+    elif client._db_type == 'sqlite':
+        
+        return sqlite3.connect(client._db_path)
+
+    else:
+        raise ValueError(f'{client._db_type}: does not match accepted db_types')
