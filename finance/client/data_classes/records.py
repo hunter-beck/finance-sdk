@@ -105,9 +105,9 @@ class RecordsAPI(GenericAPI):
     _table_name = 'records'
     _table_definition = '''
         CREATE TABLE records (
-            id text PRIMARY KEY,
+            id varchar(10) PRIMARY KEY,
             date text NOT NULL,
-            account_id text NOT NULL,
+            account_id varchar(10) NOT NULL,
             balance real NOT NULL,
             currency text NOT NULL,
             FOREIGN KEY (account_id) REFERENCES accounts (id)

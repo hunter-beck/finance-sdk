@@ -23,11 +23,11 @@ class AccountsAPI(GenericAPI):
     
     _table_definition = '''
         CREATE TABLE accounts (
-            id text PRIMARY KEY,
-            name text NOT NULL,
-            country_code text NOT NULL,
-            label_id text,
-            FOREIGN KEY (label_id) REFERENCES labels (id)
+            [id] varchar(10) PRIMARY KEY,
+            [name] text NOT NULL,
+            [country_code] text NOT NULL,
+            [label_id] varchar(10),
+            FOREIGN KEY ([label_id]) REFERENCES labels ([id])
         )
     '''
     

@@ -21,7 +21,7 @@ class LabelsAPI(GenericAPI):
     _table_name = 'labels'
     _table_definition = '''
         CREATE TABLE labels (
-            id text PRIMARY KEY,
+            id varchar(10) PRIMARY KEY,
             name text NOT NULL,
             description text
         )
