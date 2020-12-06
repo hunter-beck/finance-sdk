@@ -45,7 +45,7 @@ class Record():
             if self.currency != currency:
                 exchange_rates = get_exchange_rates(
                     base=currency, 
-                    date=datetime.fromisoformat(self.date)
+                    date=self.date
                 )
 
                 self.balance = round(self.balance / exchange_rates['rates'][currency], 2)    
