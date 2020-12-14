@@ -16,20 +16,20 @@ class Record():
     currency: str
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
     
-    def convert_currency(self, currency, date=None, forex=None):
+    def convert_currency(self, currency, date=None, forex_rates=None):
         '''Converts the currency of the Record.
         
         Args:
             currency (str): currency to convert Record to
             date (datetime): defaults to date of record, but can specify specific date
-            forex (float): optional, manually enforce the foreign exchange rate
+            forex_rates (dict): optional, manually enforce the foreign exchange rates for all currencies
             
         Returns:
             (Record): returns record with designated currency
         '''
         
-        if forex:
-            self.balance = round(self.balance / forex, 2)
+        if forex_rates:
+            self.balance = round(self.balance / forex_rates['rates'][self.currency], 2)
             self.currency = currency
         
         elif date:
@@ -37,18 +37,18 @@ class Record():
                 base=currency, 
                 date=date
             )
-            
-            self.balance = round(self.balance * exchange_rates['rates'][currency], 2)
+            self.balance = round(self.balance / exchange_rates['rates'][self.currency], 2)
             self.currency = currency
-        
-        else:
+            
+        else: # default case with no manual date or forex
+                        
             if self.currency != currency:
                 exchange_rates = get_exchange_rates(
                     base=currency, 
                     date=self.date
                 )
-
-                self.balance = round(self.balance * exchange_rates['rates'][currency], 2)    
+                
+                self.balance = round(self.balance / exchange_rates['rates'][self.currency], 2)    
                 self.currency = currency
                 
         return self
@@ -71,11 +71,11 @@ class RecordList(GenericList):
         if date:
             exchange_rates = get_exchange_rates(
                 base=currency, 
-                date=date
+                date=datetime.date(date)
             )
-            
+                        
             for record in self:
-                record.convert_currency(currency=currency, forex=exchange_rates['rates'][currency])
+                record.convert_currency(currency=currency, forex_rates=exchange_rates)
         
         else:
             for record in self:
