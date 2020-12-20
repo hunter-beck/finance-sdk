@@ -11,7 +11,7 @@ class Account():
     country_code: str
     label_id: str = None
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
-    
+    _client_resource_class='accounts'
     
 class AccountList(GenericList):
     '''List of Accounts'''

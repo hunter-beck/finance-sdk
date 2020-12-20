@@ -15,6 +15,7 @@ class Record():
     balance: float
     currency: str
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
+    _client_resource_class='records'
     
     def convert_currency(self, currency, date=None, forex_rates=None):
         '''Converts the currency of the Record.

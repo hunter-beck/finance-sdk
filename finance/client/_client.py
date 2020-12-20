@@ -2,7 +2,6 @@ import csv
 from finance.client.data_classes.records import Record, RecordList, RecordsAPI
 from finance.client.data_classes.accounts import Account, AccountList, AccountsAPI
 from finance.client.data_classes.labels import Label, LabelList, LabelsAPI
-from finance.client.utils._database import createTable, updateMultipleRecords
 from pathlib import Path
 import os
 import csv

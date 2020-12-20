@@ -10,6 +10,7 @@ class Label():
     name: str
     description: str
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
+    _client_resource_class='labels'
 
     
 class LabelList(GenericList):

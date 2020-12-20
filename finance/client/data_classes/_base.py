@@ -1,7 +1,7 @@
 import pandas as pd
 import collections
-from dataclasses import dataclass, field
-from finance.client.utils._database import retrieveData, updateMultipleRecords, createMultipleRecords, deleteMultipleRecords
+from dataclasses import dataclass, field, astuple, asdict
+from finance.client.utils._database import retrieveData, deleteMultipleRecords, writeData
 
 class GenericAPI():
     '''Generic interface to SQLite database from resource objects
@@ -33,15 +33,23 @@ class GenericAPI():
         )   
     
     def create(self, objects):
-        '''Create a new object in the database.
+        '''Create new objects in the database
         
         Args:
             objects (list of Account, Record, Label): items to be written to the database
         '''
-        createMultipleRecords(
+        values = f"({','.join(asdict(objects[0]).keys())})"
+        val_placeholder = ','.join(['?']*len(asdict(objects[0]).keys()))
+        query = f'''INSERT INTO {self._table_name} {values} VALUES ({val_placeholder})'''
+        
+        writeData(
             client=self._client,
-            table_name=self._table_name,
-            records=objects)
+            query=query,
+            records=objects,
+            mode='many'
+        )
+        
+        return objects
         
     def upsert(self, objects):
         '''Upsert the objects passed. 
@@ -49,11 +57,54 @@ class GenericAPI():
         Args:
             objects (list of Account, Record, Label): objects to upsert
         '''
+        test_object = asdict(objects[0])
+        row_values = f"({','.join(test_object.keys())})"
+        val_placeholder = ','.join(['?']*len(test_object.keys()))
+        source_row_values = f"(Source.{', Source.'.join(test_object.keys())})"
+        update_values = ','.join([f"{key}=Source.{key}" for key in test_object.keys()])
+
+        query = f'''
+            MERGE INTO {self._table_name} as Target
+            USING (SELECT * FROM 
+                (VALUES ({val_placeholder})) 
+                AS s {row_values}
+                ) AS Source
+            ON Target.id=Source.id
+            WHEN NOT MATCHED THEN
+            INSERT {row_values} VALUES {source_row_values}
+            WHEN MATCHED THEN
+            UPDATE SET {update_values};
+        '''
+        print(query)
         
-        updateMultipleRecords(
-            db_path=self._db_path, 
-            table_name=self._table_name,
-            records=objects)
+        writeData(
+            client=self._client, 
+            query=query,
+            records=objects,
+            mode='many'    
+        )
+        
+        return objects
+    
+    # def update(self, objects):
+    #     '''Update the objects passed. 
+        
+    #     Args:
+    #         objects (list of Account, Record, Label): objects to upsert
+    #     '''
+        
+    #     values = f"({','.join(asdict(objects[0]).keys())})"
+    #     val_placeholder = ','.join(['?']*len(asdict(objects[0]).keys()))
+    #     query = f'''UPDATE {self._table_name} {values} VALUES ({val_placeholder})'''
+    #     print(query)
+        
+    #     writeMultiple(
+    #         client=self._client, 
+    #         query=query,
+    #         records=objects    
+    #     )
+        
+    #     return objects
         
     def delete(self, ids):
         '''Delete the data from the database based on the specified ids
