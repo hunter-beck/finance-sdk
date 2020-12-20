@@ -56,38 +56,7 @@ def writeData(client, query, records, mode='single'):
     con.commit()
     cur.close()
     con.close()
-        
     
-# def updateMultipleRecords(db_path, table_name, records):
-#     '''INSERT OR REPLACE records in the specified table based on the parameters.
-    
-#     Args:
-#         db_path (Path): db_path (Path): path defining the location of the sqlite3 database
-#         table_name (str): name of table in the database
-#         records (list): list of records with the same structure as 'values'
-#     '''
-    
-#     values = tuple(asdict(records[0]).keys()) # uses first record as indicative of all records
-    
-#     tuple_records = [astuple(record) for record in records]
-    
-#     con = sqlite3.connect(db_path)
-#     cur = con.cursor()
-    
-#     val_placeholder = ','.join(['?']*len(values))
-    
-#     update_query = f'''REPLACE INTO {table_name} {values} VALUES ({val_placeholder})'''
-    
-#     try:
-#         cur.executemany(update_query, tuple_records)
-#     except:
-#         cur.close()
-#         con.close()
-#         raise
-    
-#     con.commit()
-#     cur.close()
-#     con.close()
     
 def retrieveData(client, query, resource_type, list_type):
     '''Retrieves list of records based on query
