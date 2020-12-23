@@ -61,22 +61,22 @@ class GenericAPI():
         test_object = asdict(objects[0])
         row_values = f"({','.join(test_object.keys())})"
         val_placeholder = ','.join(['?']*len(test_object.keys()))
-        source_row_values = f"(Source.{', Source.'.join(test_object.keys())})"
-        update_values = ','.join([f"{key}=Source.{key}" for key in test_object.keys()])
+        source_row_values = f"Source.{', Source.'.join(test_object.keys())}"
+        update_values = ','.join([f"Target.{key}=Source.{key}" for key in test_object.keys()])
 
         query = f'''
-            MERGE INTO {self._table_name} as Target
+            MERGE INTO {self._table_name} AS Target
             USING (SELECT * FROM 
                 (VALUES ({val_placeholder})) 
                 AS s {row_values}
                 ) AS Source
-            ON Target.id=Source.id
-            WHEN NOT MATCHED THEN
-            INSERT {row_values} VALUES {source_row_values}
+            ON Target.id = Source.id
+            WHEN NOT MATCHED BY Target THEN
+                INSERT {row_values} VALUES ({source_row_values})
             WHEN MATCHED THEN
-            UPDATE SET {update_values};
+                UPDATE SET {update_values};
         '''
-        
+                
         tuple_values = [astuple(obj) for obj in objects]
         
         writeData(
