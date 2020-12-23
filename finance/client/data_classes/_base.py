@@ -1,7 +1,7 @@
 import pandas as pd
 import collections
 from dataclasses import dataclass, field, astuple, asdict
-from finance.client.utils._database import retrieveData, deleteMultipleRecords, writeData
+from finance.client.utils._database import retrieveData, writeData
 
 class GenericAPI():
     '''Generic interface to SQLite database from resource objects
@@ -41,11 +41,12 @@ class GenericAPI():
         values = f"({','.join(asdict(objects[0]).keys())})"
         val_placeholder = ','.join(['?']*len(asdict(objects[0]).keys()))
         query = f'''INSERT INTO {self._table_name} {values} VALUES ({val_placeholder})'''
+        tuple_values = [astuple(obj) for obj in objects]
         
         writeData(
             client=self._client,
             query=query,
-            records=objects,
+            values=tuple_values,
             mode='many'
         )
         
@@ -75,36 +76,17 @@ class GenericAPI():
             WHEN MATCHED THEN
             UPDATE SET {update_values};
         '''
-        print(query)
+        
+        tuple_values = [astuple(obj) for obj in objects]
         
         writeData(
             client=self._client, 
             query=query,
-            records=objects,
+            values=tuple_values,
             mode='many'    
         )
         
         return objects
-    
-    # def update(self, objects):
-    #     '''Update the objects passed. 
-        
-    #     Args:
-    #         objects (list of Account, Record, Label): objects to upsert
-    #     '''
-        
-    #     values = f"({','.join(asdict(objects[0]).keys())})"
-    #     val_placeholder = ','.join(['?']*len(asdict(objects[0]).keys()))
-    #     query = f'''UPDATE {self._table_name} {values} VALUES ({val_placeholder})'''
-    #     print(query)
-        
-    #     writeMultiple(
-    #         client=self._client, 
-    #         query=query,
-    #         records=objects    
-    #     )
-        
-    #     return objects
         
     def delete(self, ids):
         '''Delete the data from the database based on the specified ids
@@ -112,10 +94,15 @@ class GenericAPI():
         Args:
             ids (str | list of str): ids to delete
         '''
-        deleteMultipleRecords(
-            db_path=self._db_path,
-            table_name=self._table_name,
-            ids=ids
+        
+        query = f'''DELETE FROM {self._table_name} WHERE id=?'''
+        tuple_values = [tuple([i]) for i in ids]
+        
+        writeData(
+            client=self._client,
+            query=query,
+            values=tuple_values,
+            mode='many'
         )
 
 class GenericList(collections.abc.MutableSequence):

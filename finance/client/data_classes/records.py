@@ -118,24 +118,29 @@ class RecordsAPI(GenericAPI):
     _resource_type = Record
     _list_type = RecordList
 
-    def list(self, account_id=None, currency=None):
+    def list(self, account_ids=None, currencies=None):
         '''Retrieves a list of records based on the criteria. 
+        List of conditions are treated as `OR`, and multiple conditions are treated as `AND`
+        For example:
+            (account_id=111 OR account_id=222) AND (currency=USD)
 
         Args:
-            account_id (str): unique id of the account on the record
-            currency (str): currency code for the record
+            account_ids (list of str): unique ids of the account on the record
+            currencies (list of str): currency code for the record
         Returns:
             (list): objects meeting filter criteria
         '''
         
         query_list = []
             
-        if account_id:
-            account_id_query = f'account_id = "{account_id}"'
+        if account_ids:
+            formatted_account_ids = ','.join([f"'{account_id}'" for account_id in account_ids])
+            account_id_query = f"account_id IN ({formatted_account_ids})"
             query_list.append(account_id_query)
 
-        if currency:
-            currency_query = f'currency = "{currency}"'
+        if currencies:
+            formatted_currencies = ','.join([f"'{curr}'" for curr in currencies])
+            currency_query = f"currency IN ({formatted_currencies})"
             query_list.append(currency_query)
             
         if len(query_list) > 0:
@@ -144,7 +149,7 @@ class RecordsAPI(GenericAPI):
             filter = ''
             
         query = f'SELECT * FROM {self._table_name} {filter}'
-            
+                    
         return retrieveData(
             client=self._client, 
             query=query,
